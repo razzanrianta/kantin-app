@@ -1,0 +1,164 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  email String @unique
+  username String
+  password String 
+  role Role @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  merchants Merchant[]
+  merchantApplications MerchantApplication[] @relation("Applicant")
+  orders Order[]
+  reviewedApplications MerchantApplication[] @relation("Reviewer")
+}
+
+enum MerchantApplicationStatus {
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model MerchantApplication {
+  id Int @id @default(autoincrement())
+  name String 
+  description String
+  location String
+  permitDoc String
+  status MerchantApplicationStatus @default(UNDER_REVIEW)
+  phone String
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applicantId Int
+  applicant User @relation("Applicant",fields: [applicantId], references: [id])
+
+  reviewerId Int?
+  reviewer User? @relation("Reviewer", fields: [reviewerId], references: [id])
+}
+
+enum MerchantStatus {
+  ACTIVE
+  SHUTDOWN 
+}
+
+model Merchant {
+  id Int @id @default(autoincrement())
+  name String
+  description String
+  location String
+  phone String
+  logoPath String?
+  status MerchantStatus @default(ACTIVE)
+
+  openAt DateTime?
+  closeAt DateTime?
+
+  ownerId Int
+  owner User @relation(fields: [ownerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+  orders Order[]
+}
+
+enum OrderStatus {
+  WAITING_PAYMENT
+  PAID
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+model Order {
+  id Int @id @default(autoincrement())
+  status OrderStatus @default(WAITING_PAYMENT)
+  totalPrice Int
+  items OrderItem[]
+
+  buyerId Int
+  buyer User @relation(fields: [buyerId], references: [id])
+
+  merchantId Int
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  payment Payment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id Int @id @default(autoincrement())
+
+  orderId Int
+  order Order @relation(fields: [orderId], references: [id])
+
+  productId Int
+  product Product @relation(fields: [productId], references: [id])
+
+  quantity Int
+  price Int
+}
+
+model Product {
+  id Int @id @default(autoincrement())
+
+  name String
+  price Int
+  image String
+
+  orderItems OrderItem[]
+
+  merchantId Int
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+}
+
+enum PaymentStatus {
+  WAITING_VERIFICATION
+  VERIFIED
+  REJECTED
+}
+
+model Payment {
+  id Int @id @default(autoincrement())
+
+  orderId Int @unique
+  order Order @relation(fields: [orderId], references: [id])
+
+  proofPath String
+
+  status PaymentStatus @default(WAITING_VERIFICATION)
+
+  uploadedAt DateTime?
+
+  verifiedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
