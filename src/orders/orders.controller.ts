@@ -32,6 +32,20 @@ export class OrdersController {
         return this.ordersService.createOrder(req.user.sub, createOrderDto);
     }
 
+    @Get('purchases')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.USER)
+    allPurchases(@Request() req: any){
+        return this.ordersService.allPurchases(req.user.sub);
+    }
+
+    @Get('sales')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.USER)
+    allSales(@Request() req: any){
+        return this.ordersService.allSales(req.user.sub);
+    }
+
     @Post(':orderId/payment')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.USER)
@@ -134,19 +148,4 @@ export class OrdersController {
             req.user.sub
         );
     }
-
-    @Get('purchases')
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(Role.USER)
-    allPurchases(@Request() req: any){
-        return this.ordersService.allPurchases(req.user.sub);
-    }
-
-    @Get('sales')
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(Role.USER)
-    allSales(@Request() req: any){
-        return this.ordersService.allSales(req.user.sub);
-    }
-
 }

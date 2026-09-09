@@ -86,4 +86,27 @@ export class AuthService {
             access_token: accessToken
         };
     }
+
+    async getMe(userId: number){
+        const user = await this.prisma.user.findUnique({
+            where: {
+                id: userId
+            },
+            select: {
+                id: true,
+                username: true,
+                role: true,
+                email: true,
+                merchants: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
+            }
+
+        })
+
+        return user;
+    }
 }

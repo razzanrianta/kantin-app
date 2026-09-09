@@ -7,7 +7,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 
 @Injectable()
 export class MerchantsService {
-    constructor (private readonly prisma:PrismaService){}
+    constructor(private readonly prisma: PrismaService) {}
 
     // ini pada halaman utama aplikasi daftar semua toko toko
     async allMerchants() {
