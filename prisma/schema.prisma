@@ -89,6 +89,7 @@ model Merchant {
 
 enum OrderStatus {
   WAITING_PAYMENT
+  WAITING_VERIFICATION
   PAID
   READY
   COMPLETED

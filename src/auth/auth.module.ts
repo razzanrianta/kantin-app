@@ -3,9 +3,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
     imports: [
+        PassportModule.register({
+            defaultStrategy: 'jwt'
+        }),
         JwtModule.register({
             secret:process.env.JWT_SECRET,
             signOptions: {
@@ -14,7 +18,8 @@ import { JwtStrategy } from './jwt.strategy';
         })
     ],
     controllers: [AuthController],
-    providers: [AuthService, JwtStrategy]
+    providers: [AuthService, JwtStrategy],
+    exports: [PassportModule, JwtModule]
 }) 
 export class AuthModule {
 }

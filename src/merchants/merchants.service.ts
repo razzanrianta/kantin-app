@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { MerchantStatus } from 'src/enums/merchantStatus.enum';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ApplyMerchantDto } from './dto/apply-merchant.dto';
@@ -18,6 +18,76 @@ export class MerchantsService {
         });
 
         return all;
+    }
+
+    async allSales(merchantId: number, ownerId: number){
+        const merchant = await this.prisma.merchant.findUnique({
+            where: {
+                id: merchantId,
+                ownerId
+            }
+        })
+
+        if(!merchant){
+            throw new BadRequestException(
+                'Tidak terdapat toko'
+            )
+        }
+
+        const orders = await this.prisma.order.findMany({
+            where: {
+                merchantId,
+            },
+            include: {
+                buyer: true
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        })
+
+        if(!orders){
+            throw new NotFoundException(
+                'Tidak ada pesanan'
+            )
+        }
+
+        return orders;
+    }
+
+    async myShops(ownerId: number){
+        const merchants = await this.prisma.merchant.findMany({
+            where: {
+                ownerId
+            }
+        })
+
+        if(!merchants){
+            throw new BadRequestException(
+                'Toko tidak ditemukan'
+            )
+        }
+
+        return merchants
+    }
+
+    async oneShop(merchantId: number, ownerId: number){
+        const merchant = await this.prisma.merchant.findUnique({
+            where: {
+                id: merchantId,
+                ownerId
+            },
+            include: {
+                products: true
+            }
+        })
+
+        if(!merchant){
+            throw new BadRequestException(
+                'Toko tidak ditemukan'
+            )
+        }
+        return merchant
     }
 
     // ini ketika user menekan sebuah toko lalu diarahkan nanti ke detail toko

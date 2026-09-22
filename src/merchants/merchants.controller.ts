@@ -44,7 +44,7 @@ export class MerchantsController {
     @UseGuards(JwtAuthGuard, RolesGuard)
     @UseInterceptors(FileInterceptor('permitDoc', {
         storage: diskStorage({
-            destination: './applicants',
+            destination: './uploads/applicants',
             filename: (
                 req, permitDoc, callback
             ) => {
@@ -101,19 +101,49 @@ export class MerchantsController {
         return this.merchantsService.addMerchant(merchantAppId, req.user.sub);
     }
 
-    @Get(':merchantId')
+    @Get('myshops')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.USER)
-    merchantInfo(@Param('merchantId', ParseIntPipe) id: number) {
-        return this.merchantsService.merchantInfo(id);
+    myShops(
+        @Request() req: any
+    ){
+        return this.merchantsService.myShops(
+            req.user.sub
+        )
     }
 
-    @Post(':merchantId/products')
+    @Get('myshops/:merchantId')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.USER)
+    oneShop(
+        @Param('merchantId',ParseIntPipe) merchantId: number,
+        @Request() req: any
+    ){
+        return this.merchantsService.oneShop(
+            merchantId,
+            req.user.sub
+        )
+    }
+
+    @Get('myshops/:merchantId/sales')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.USER)
+    allSales(
+        @Param('merchantId',ParseIntPipe) merchantId: number, 
+        @Request() req: any
+    ){
+        return this.merchantsService.allSales(
+            merchantId,
+            req.user.sub
+        )
+    }
+
+    @Post('myshops/:merchantId/products')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.USER)
     @UseInterceptors(FileInterceptor('image', {
         storage: diskStorage({
-            destination: './products',
+            destination: './uploads/products',
             filename: (req, image, callback) => {
                 callback(
                     null,
@@ -144,7 +174,7 @@ export class MerchantsController {
         }
     }))
     addProduct(
-        createProductDto: CreateProductDto,
+        @Body() createProductDto: CreateProductDto,
         @Param('merchantId', ParseIntPipe) merchantId: number,
         @Request() req: any,
         @UploadedFile() image: Express.Multer.File
@@ -155,6 +185,13 @@ export class MerchantsController {
             req.user.sub,
             image
         );
+    }
+
+    @Get(':merchantId')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.USER)
+    merchantInfo(@Param('merchantId', ParseIntPipe) id: number) {
+        return this.merchantsService.merchantInfo(id);
     }
 
     @Delete(':merchantId/products/:productId')

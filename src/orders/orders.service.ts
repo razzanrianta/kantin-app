@@ -98,6 +98,30 @@ export class OrdersService {
         return order;
     }
 
+    async oneOrder(buyerId: number, orderId: number){
+        const order = await this.prisma.order.findUnique({
+            where: {
+                buyerId,
+                id: orderId
+            },
+            include: {
+                items: {
+                    include: {
+                        product: true
+                    }
+                }
+            }
+        })
+
+        if(!order){
+            throw new NotFoundException(
+                'Pesanan ini tidak dapat ditemukan'
+            )
+        }
+
+        return order;
+    }
+
     async pay(orderId: number, file: Express.Multer.File, userId: number){
         const order = await this.prisma.order.findUnique({
             where: {
@@ -117,15 +141,29 @@ export class OrdersService {
             )
         }
 
-        const payment = await this.prisma.payment.create({
-            data: {
-                orderId,
-                proofPath: file.path,
-                uploadedAt: new Date()
+        return this.prisma.$transaction(async (tx) => {
+            const updatedOrder = await tx.order.update({
+                where: {
+                    id: orderId
+                },
+                data: {
+                    status: OrderStatus.WAITING_VERIFICATION
+                }
+            });
+
+            const payment = await tx.payment.create({
+                data: {
+                    orderId,
+                    proofPath: file.path,
+                    uploadedAt: new Date()
+                }
+            });
+
+            return {
+                updatedOrder,
+                payment
             }
         })
-
-        return payment;
     }
 
     async verifyPayment(orderId: number, userId: number){
@@ -354,36 +392,9 @@ export class OrdersService {
                 buyerId: userId
             },
             include: {
-                items: true
+                merchant: true
             }
         });
-        return orders;
-    }
-
-    async allSales(userId: number){
-        const merchant = await this.prisma.merchant.findFirst({
-            where: {
-                ownerId: userId
-            },
-        });
-
-        if(!merchant){
-            throw new ForbiddenException(
-                'Anda tidak memiliki merchant'
-            )
-        }
-
-        const orders = await this.prisma.order.findMany({
-            where: {
-                merchantId: merchant.id
-            }
-        });
-
-        if(!orders){
-            throw new NotFoundException(
-                'Belum ada pesanan'
-            )
-        }
         return orders;
     }
 }

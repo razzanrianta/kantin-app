@@ -39,11 +39,14 @@ export class OrdersController {
         return this.ordersService.allPurchases(req.user.sub);
     }
 
-    @Get('sales')
+    @Get(':orderId')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.USER)
-    allSales(@Request() req: any){
-        return this.ordersService.allSales(req.user.sub);
+    oneOrder(@Request() req: any, @Param('orderId',ParseIntPipe) orderId: number){
+        return this.ordersService.oneOrder(
+            req.user.sub,
+            orderId
+        )
     }
 
     @Post(':orderId/payment')
@@ -51,7 +54,7 @@ export class OrdersController {
     @Roles(Role.USER)
     @UseInterceptors(FileInterceptor('file', {
         storage: diskStorage({
-            destination: './uploads',
+            destination: './uploads/payments',
             filename: (
                 req,
                 file,
