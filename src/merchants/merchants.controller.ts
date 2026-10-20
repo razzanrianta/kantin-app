@@ -138,6 +138,21 @@ export class MerchantsController {
         )
     }
 
+    @Get('myshops/:merchantId/sales/:orderId')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(Role.USER)
+    oneSale(
+        @Param('merchantId', ParseIntPipe) merchantId: number,
+        @Param('orderId', ParseIntPipe) orderId: number,
+        @Request() req: any
+    ) {
+        return this.merchantsService.oneSale(
+            merchantId,
+            orderId,
+            req.user.sub
+        )
+    }
+
     @Post('myshops/:merchantId/products')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(Role.USER)

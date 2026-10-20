@@ -55,6 +55,31 @@ export class MerchantsService {
         return orders;
     }
 
+    async oneSale(merchantId: number, orderId: number, userId: number){
+        const order = await this.prisma.order.findUnique({
+            where: {
+                id: orderId,
+                merchantId
+            },
+            include: {
+                merchant: true
+            }
+        })
+
+        if(!order) {
+            throw new NotFoundException(
+                "Pesanan ini tidak ditemukan"
+            )
+        }
+        const ownerId = order.merchant.ownerId
+        if(ownerId !== userId) {
+            throw new ForbiddenException(
+                "Anda tidak dapat mengakses ini"
+            )
+        }
+        return order;
+    }
+
     async myShops(ownerId: number){
         const merchants = await this.prisma.merchant.findMany({
             where: {
